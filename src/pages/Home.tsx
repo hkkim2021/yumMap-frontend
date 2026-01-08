@@ -1,5 +1,9 @@
-import { Map, MapMarker } from "react-kakao-maps-sdk";
+import { Map, MapMarker, ZoomControl } from "react-kakao-maps-sdk";
+import { useEffect, useState } from "react";
+
 export default function Home() {
+  const [map, setMap] = useState<kakao.maps.Map | null>(null);
+  const center = { lat: 37.5665, lng: 126.978 };
   const category = [
     "한식",
     " 중식",
@@ -10,6 +14,17 @@ export default function Home() {
     "회/초밥",
     "기타",
   ];
+  useEffect(() => {
+    if (!map) return;
+
+    const handleResize = () => {
+      map.relayout();
+      map.setCenter(new kakao.maps.LatLng(center.lat, center.lng));
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [map]);
   return (
     <div className="mx-5 mt-5 ">
       <div className="flex justify-between">
@@ -31,8 +46,11 @@ export default function Home() {
           <Map
             center={{ lat: 37.5665, lng: 126.978 }}
             style={{ width: "100%", height: "100%" }}
-            level={5}
+            level={8}
+            zoomable={true}
+            onCreate={setMap}
           >
+            <ZoomControl position={"TOPRIGHT"} />
             <MapMarker position={{ lat: 37.5665, lng: 126.978 }} />
           </Map>
         </div>
