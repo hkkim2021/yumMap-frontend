@@ -1,4 +1,9 @@
-import { Map, MapMarker, ZoomControl } from "react-kakao-maps-sdk";
+import {
+  Map,
+  MapMarker,
+  ZoomControl,
+  MapInfoWindow,
+} from "react-kakao-maps-sdk";
 import { useEffect, useState } from "react";
 import { dataset } from "../data/shop";
 
