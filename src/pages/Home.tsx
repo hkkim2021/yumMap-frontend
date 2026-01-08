@@ -1,9 +1,19 @@
 import { Map, MapMarker, ZoomControl } from "react-kakao-maps-sdk";
 import { useEffect, useState } from "react";
+import { dataset } from "../data/shop";
+
+interface MapItems {
+  title: string;
+  address: string;
+  lat: number;
+  lng: number;
+}
 
 export default function Home() {
   const [map, setMap] = useState<kakao.maps.Map | null>(null);
   const center = { lat: 37.5665, lng: 126.978 };
+  const [positions, setPositions] = useState<MapItems[]>([]);
+
   const category = [
     "한식",
     " 중식",
@@ -14,6 +24,27 @@ export default function Home() {
     "회/초밥",
     "기타",
   ];
+
+  useEffect(() => {
+    const geocoder = new kakao.maps.services.Geocoder();
+    const newPositions: MapItems[] = [];
+    dataset.forEach((item) => {
+      geocoder.addressSearch(item.address, (result, status) => {
+        if (status === kakao.maps.services.Status.OK) {
+          newPositions.push({
+            ...item,
+            lat: Number(result[0].y),
+            lng: Number(result[0].x),
+          });
+        }
+
+        if (newPositions.length === dataset.length) {
+          setPositions([...newPositions]);
+        }
+      });
+    });
+  }, []);
+
   useEffect(() => {
     if (!map) return;
 
@@ -25,6 +56,7 @@ export default function Home() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [map]);
+
   return (
     <div className="mx-5 mt-5 ">
       <div className="flex justify-between">
@@ -48,10 +80,18 @@ export default function Home() {
             style={{ width: "100%", height: "100%" }}
             level={8}
             zoomable={true}
+            draggable={true}
             onCreate={setMap}
           >
             <ZoomControl position={"TOPRIGHT"} />
-            <MapMarker position={{ lat: 37.5665, lng: 126.978 }} />
+            {/* <MapMarker position={{ lat: 37.5665, lng: 126.978 }} /> */}
+            {positions.map((item, idx) => (
+              <MapMarker
+                key={idx}
+                position={{ lat: item.lat, lng: item.lng }}
+                title={item.title}
+              />
+            ))}
           </Map>
         </div>
       </div>
