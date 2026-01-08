@@ -10,14 +10,17 @@ import { dataset } from "../data/shop";
 interface MapItems {
   title: string;
   address: string;
+  url: string;
   lat: number;
   lng: number;
+  urlImg: string;
 }
 
 export default function Home() {
   const [map, setMap] = useState<kakao.maps.Map | null>(null);
   const center = { lat: 37.5665, lng: 126.978 };
   const [positions, setPositions] = useState<MapItems[]>([]);
+  const [isOpen, setIsOpen] = useState<number | null>(null);
 
   const category = [
     "한식",
@@ -34,12 +37,27 @@ export default function Home() {
     const geocoder = new kakao.maps.services.Geocoder();
     const newPositions: MapItems[] = [];
     dataset.forEach((item) => {
+      let videoId = "";
+      const url = item.url;
+
+      if (url.includes("v=")) {
+        videoId = url.split("v=")[1].split("&")[0];
+      } else if (url.includes("youtu.be/")) {
+        videoId = url.split("youtu.be/")[1].split("?")[0];
+      } else if (url.includes("embed/")) {
+        videoId = url.split("embed/")[1].split("?")[0];
+      }
+      const thumbnailUrl = videoId
+        ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
+        : "";
+
       geocoder.addressSearch(item.address, (result, status) => {
         if (status === kakao.maps.services.Status.OK) {
           newPositions.push({
             ...item,
             lat: Number(result[0].y),
             lng: Number(result[0].x),
+            urlImg: thumbnailUrl,
           });
         }
 
@@ -87,6 +105,7 @@ export default function Home() {
             zoomable={true}
             draggable={true}
             onCreate={setMap}
+            onClick={() => setIsOpen(null)}
           >
             <ZoomControl position={"TOPRIGHT"} />
             {/* <MapMarker position={{ lat: 37.5665, lng: 126.978 }} /> */}
@@ -94,8 +113,34 @@ export default function Home() {
               <MapMarker
                 key={idx}
                 position={{ lat: item.lat, lng: item.lng }}
-                title={item.title}
-              />
+                clickable={true}
+                onClick={() => setIsOpen(idx)}
+              >
+                {isOpen === idx && (
+                  <div
+                    style={{
+                      minWidth: "220px",
+                      margin: "3px",
+                      background: "white",
+                    }}
+                  >
+                    <a href={item.url} target="_blank" rel="noreferrer">
+                      <img
+                        src={item.urlImg}
+                        style={{
+                          width: "100%",
+                          height: "120px",
+                          objectFit: "cover",
+                        }}
+                      />
+                    </a>
+                    <div className="font-bold text-sm my-2">{item.title}</div>
+                    <div className="text-xs text-gray-500 mb-2">
+                      {item.address}
+                    </div>
+                  </div>
+                )}
+              </MapMarker>
             ))}
           </Map>
         </div>
