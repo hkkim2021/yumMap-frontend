@@ -14,6 +14,7 @@ interface MapItems {
   lat: number;
   lng: number;
   urlImg: string;
+  category: string;
 }
 
 export default function Home() {
@@ -21,13 +22,14 @@ export default function Home() {
   const center = { lat: 37.5665, lng: 126.978 };
   const [positions, setPositions] = useState<MapItems[]>([]);
   const [isOpen, setIsOpen] = useState<number | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const category = [
     "한식",
     " 중식",
-    " 일식",
+    "일식",
     "양식",
-    "분석",
+    "분식",
     "구이",
     "회/초밥",
     "기타",
@@ -91,8 +93,18 @@ export default function Home() {
           맛집지도 카테고리를 선택해보세요
         </h2>
         <div className="grid grid-cols-4 justify-between">
-          {category.map((item, val) => (
-            <button className="rounded-sm py-2 hover:text-[#e69a06] ">
+          {category.map((item, idxl) => (
+            <button
+              className={`rounded-sm py-2 transition-colors ${
+                selectedCategory === item
+                  ? "text-yellow-600 font-bold"
+                  : "hover:text-[#e69a06]"
+              }`}
+              onClick={() => {
+                setIsOpen(null);
+                setSelectedCategory(item);
+              }}
+            >
               {item}
             </button>
           ))}
@@ -109,48 +121,50 @@ export default function Home() {
           >
             <ZoomControl position={"TOPRIGHT"} />
             {/* <MapMarker position={{ lat: 37.5665, lng: 126.978 }} /> */}
-            {positions.map((item, idx) => (
-              <MapMarker
-                key={idx}
-                position={{ lat: item.lat, lng: item.lng }}
-                clickable={true}
-                onClick={() => {
-                  setIsOpen(idx);
-                  if (map) {
-                    const movePosition = new kakao.maps.LatLng(
-                      item.lat,
-                      item.lng
-                    );
-                    map.panTo(movePosition);
-                  }
-                }}
-              >
-                {isOpen === idx && (
-                  <div
-                    style={{
-                      minWidth: "220px",
-                      margin: "3px",
-                      background: "white",
-                    }}
-                  >
-                    <a href={item.url} target="_blank" rel="noreferrer">
-                      <img
-                        src={item.urlImg}
-                        style={{
-                          width: "100%",
-                          height: "120px",
-                          objectFit: "cover",
-                        }}
-                      />
-                    </a>
-                    <div className="font-bold text-sm my-2">{item.title}</div>
-                    <div className="text-xs text-gray-500 mb-2">
-                      {item.address}
+            {positions
+              .filter((item) => item.category === selectedCategory)
+              .map((item, idx) => (
+                <MapMarker
+                  key={idx}
+                  position={{ lat: item.lat, lng: item.lng }}
+                  clickable={true}
+                  onClick={() => {
+                    setIsOpen(idx);
+                    if (map) {
+                      const movePosition = new kakao.maps.LatLng(
+                        item.lat,
+                        item.lng
+                      );
+                      map.panTo(movePosition);
+                    }
+                  }}
+                >
+                  {isOpen === idx && (
+                    <div
+                      style={{
+                        minWidth: "220px",
+                        margin: "3px",
+                        background: "white",
+                      }}
+                    >
+                      <a href={item.url} target="_blank" rel="noreferrer">
+                        <img
+                          src={item.urlImg}
+                          style={{
+                            width: "100%",
+                            height: "120px",
+                            objectFit: "cover",
+                          }}
+                        />
+                      </a>
+                      <div className="font-bold text-sm my-2">{item.title}</div>
+                      <div className="text-xs text-gray-500 mb-2">
+                        {item.address}
+                      </div>
                     </div>
-                  </div>
-                )}
-              </MapMarker>
-            ))}
+                  )}
+                </MapMarker>
+              ))}
           </Map>
         </div>
       </div>
